@@ -4,19 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.currencyrate.ui.theme.CurrencyRateTheme
-import com.example.currencyrate.ui.theme.Composable.MainScaffold
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.currencyrate.data.CurrencyRepository
+import com.example.currencyrate.ui.CurrencyViewModel
+import com.example.currencyrate.ui.CurrencyViewModelFactory
+import com.example.currencyrate.ui.MainScaffold
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MainScaffold()
+            val repository = CurrencyRepository()
+            val viewModel: CurrencyViewModel = viewModel(factory = CurrencyViewModelFactory(repository))
+
+            MainScaffold(viewModel = viewModel)
         }
     }
 }

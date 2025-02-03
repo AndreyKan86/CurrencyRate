@@ -1,12 +1,14 @@
-package com.example.currencyrate.ui.theme.Composable
+package com.example.currencyrate.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -26,6 +28,8 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,11 +49,13 @@ import com.example.currencyrate.ui.theme.*
 //Основное поле
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScaffold() {
+fun MainScaffold(viewModel: CurrencyViewModel) {
     MaterialTheme(
     ) {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
+
+
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -72,8 +78,8 @@ fun MainScaffold() {
                         },
 
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MainTopMenuColor,
-                            titleContentColor = GoldU
+                            containerColor = BlackU,
+                            titleContentColor = OrangeU
                         )
                     )
                 },
@@ -86,11 +92,9 @@ fun MainScaffold() {
                     }
                 }
             ) { innerPadding ->
-                Text(
-                    text = "Euro = ....",
-                    modifier = Modifier.padding(innerPadding),
-                )
-            }
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    Text("Курс евро")
+                }            }
         }
     }
 }
@@ -102,7 +106,6 @@ fun TitleTop() {
         .padding(horizontal = 8.dp)
         .padding(end = 26.dp)
         .fillMaxWidth(),
-        //.background(GreyU),
         contentAlignment = Alignment.Center){
         Text("Курс валют")
     }
@@ -122,7 +125,8 @@ fun DrawerMenuBottom(drawerState: DrawerState,
     ) {
         Icon(
             imageVector = Icons.Default.Menu,
-            contentDescription = "Menu"
+            contentDescription = "Menu",
+            tint = Color.LightGray
         )
     }
 }
@@ -130,14 +134,13 @@ fun DrawerMenuBottom(drawerState: DrawerState,
 //Содержимое выплывающего меню
 @Composable
 fun DrawerContent(onItemClick: () -> Unit) {
-        ConstraintLayout(
-            modifier = Modifier
-                .fillMaxSize()
-                //.background(Color.Gray)
-        ) {
+    ModalDrawerSheet()
+    {
+        ConstraintLayout()
+        {
             val (box1, box2, upDivider, bottomDivider) = createRefs()
             Box(
-                modifier = Modifier.constrainAs(box1){
+                modifier = Modifier.constrainAs(box1) {
                     top.linkTo(parent.top, margin = 16.dp)
                     start.linkTo(parent.start, margin = 16.dp)
                 }
@@ -147,22 +150,21 @@ fun DrawerContent(onItemClick: () -> Unit) {
                     contentDescription = "Logo",
                     modifier = Modifier
                         .size(80.dp)
-                        .border(2.dp, Color.Gray, CircleShape)
+                        .border(2.dp, Color.DarkGray, CircleShape)
                         .clip(CircleShape)
-
-
                 )
             }
             Box(
                 modifier = Modifier
-                    .constrainAs(box2){
+                    .constrainAs(box2) {
                         top.linkTo(parent.top, margin = 40.dp)
                         start.linkTo(box1.end, margin = 16.dp)
                     }
             )
             {
-                Text( text = "\"СиФ\"",
-                    color = Color.Black,
+                Text(
+                    text = "\"СиФ\"",
+                    color = Color.DarkGray,
                     fontSize = 24.sp,
                     textDecoration = TextDecoration.Underline,
                     fontFamily = FontFamily.Cursive
@@ -176,7 +178,7 @@ fun DrawerContent(onItemClick: () -> Unit) {
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     },
-                color = Color.Black,
+                color = Color.DarkGray,
                 thickness = 2.dp
             )
             HorizontalDivider(
@@ -187,9 +189,24 @@ fun DrawerContent(onItemClick: () -> Unit) {
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     },
-                color = Color.Black,
+                color = Color.DarkGray,
                 thickness = 2.dp
             )
         }
-
     }
+}
+
+//Информация по курсу валют
+@Composable
+fun CurrencyScreen(viewModel: CurrencyViewModel) {
+    val currencyRates by viewModel.currencyRates.collectAsState()
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        LazyColumn {
+            items(currencyRates) { rate ->
+                Text(text = "${rate.date}: ${rate.value}")
+            }
+        }
+    }
+    viewModel.getCurrencyRates("https://www.cbr.ru/currency_base/daily/")
+}
