@@ -1,5 +1,6 @@
 package com.example.currencyrate.ui
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -41,7 +42,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.currencyrate.R
+import com.example.currencyrate.data.CurrencyRate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.example.currencyrate.ui.theme.*
@@ -49,7 +52,7 @@ import com.example.currencyrate.ui.theme.*
 //Основное поле
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScaffold(viewModel: CurrencyViewModel) {
+fun MainScaffold() {
     MaterialTheme(
     ) {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -93,6 +96,7 @@ fun MainScaffold(viewModel: CurrencyViewModel) {
                 }
             ) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
+                    CurrencyRateList()
                     Text("Курс евро")
                 }            }
         }
@@ -196,17 +200,29 @@ fun DrawerContent(onItemClick: () -> Unit) {
     }
 }
 
-//Информация по курсу валют
 @Composable
-fun CurrencyScreen(viewModel: CurrencyViewModel) {
-    val currencyRates by viewModel.currencyRates.collectAsState()
+fun CurrencyRateList(currencyViewModel: CurrencyViewModel = viewModel()) {
+    val currencyRates: List<CurrencyRate> by currencyViewModel.currencyRates.collectAsState(initial = emptyList())
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        LazyColumn {
-            items(currencyRates) { rate ->
-                Text(text = "${rate.date}: ${rate.value}")
-            }
+    Log.i("MainActivity", "НАЙДЕНО UI: ${currencyRates.size} items")
+
+    LazyColumn(modifier = Modifier.padding(16.dp)) {
+        items(currencyRates) { rate ->
+            Log.d("CurrencyApi", "КурренсиРейтЛист!!!!")
+            CurrencyRateItem(rate = rate)
         }
     }
-    viewModel.getCurrencyRates("https://www.cbr.ru/currency_base/daily/")
+}
+
+@Composable
+fun CurrencyRateItem(rate: CurrencyRate) {
+    Column(modifier = Modifier.padding(bottom = 8.dp)) {
+        Log.d("CurrencyApi", "Создание таблицы начало")
+
+        Text(text = "Date: ${rate.date}", style = MaterialTheme.typography.bodyMedium)
+        Text(text = "Rate: ${rate.value}", style = MaterialTheme.typography.bodyMedium)
+
+        Log.d("CurrencyApi", "Конец создания таблицы")
+
+    }
 }

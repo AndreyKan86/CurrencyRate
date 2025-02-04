@@ -1,54 +1,36 @@
 package com.example.currencyrate.ui
 
-import androidx.activity.result.launch
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.currencyrate.data.CurrencyRate
-import com.example.currencyrate.data.CurrencyRepository
+import com.example.currencyrate.data.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import org.jsoup.Jsoup
+import kotlinx.coroutines.Dispatchers
 
-class CurrencyViewModel(private val repository: CurrencyRepository) : ViewModel() {
-
+class CurrencyViewModel : ViewModel() {
     private val _currencyRates = MutableStateFlow<List<CurrencyRate>>(emptyList())
     val currencyRates: StateFlow<List<CurrencyRate>> = _currencyRates
 
-    fun getCurrencyRates(url: String) {
-        viewModelScope.launch {
-            val response = repository.getCurrencyRates(url)
-            if (response.isSuccessful) {
-                val htmlString = response.body()
-                if (htmlString != null) {
-                    val doc = Jsoup.parse(htmlString)
-                    val elements = doc.select("table.data tr")
-                    val rates = mutableListOf<CurrencyRate>()
-                    for (element in elements) {
-                        val tds = element.select("td")
-                        if (tds.size == 3) {
-                            val date = tds[0].text()
-                            val value = tds[2].text()
-                            rates.add(CurrencyRate(date, value))
-                        }
-                    }
-                    _currencyRates.value = rates
-                }
-            } else {
-                //TODO: Обработка ошибки
+    private val url = "https://www.val.ru/valhistory.asp?tool=978&bd=4&bm=12&by=2024&ed=4&em=2&ey=2025&showchartp=False"
+
+    init {
+        loadCurrencyRates()
+    }
+
+    private fun loadCurrencyRates() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val rates = RetrofitInstance.api.getCurrencyRates(url)
+                _currencyRates.value = rates
+                Log.i("CurrencyViewModel", "ВЬЮМОДЕЛЬ: ${rates.size} items")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _currencyRates.value = emptyList()
+                Log.e("CurrencyViewModel", "ОШИБКА", e)
             }
         }
-    }
-}
-
-class CurrencyViewModelFactory(private val repository: CurrencyRepository) :
-    ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CurrencyViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return CurrencyViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

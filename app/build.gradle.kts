@@ -64,6 +64,8 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
