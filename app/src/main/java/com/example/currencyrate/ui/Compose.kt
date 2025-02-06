@@ -2,9 +2,12 @@ package com.example.currencyrate.ui
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,9 +16,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -31,7 +38,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,13 +62,11 @@ import com.example.currencyrate.ui.theme.*
 //Основное поле
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScaffold() {
+fun MainScaffold(currencyViewModel: CurrencyViewModel = viewModel()) {
     MaterialTheme(
     ) {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
-
-
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -91,7 +99,9 @@ fun MainScaffold() {
                         containerColor = Color.Blue,
                         contentColor = Color.White
                     ) {
-                        Text("Bottom Bar")
+
+                        BottomButton()
+
                     }
                 }
             ) { innerPadding ->
@@ -200,29 +210,139 @@ fun DrawerContent(onItemClick: () -> Unit) {
     }
 }
 
+//Список валют
 @Composable
 fun CurrencyRateList(currencyViewModel: CurrencyViewModel = viewModel()) {
-    val currencyRates: List<CurrencyRate> by currencyViewModel.currencyRates.collectAsState(initial = emptyList())
+    val currencyRates: List<CurrencyRate> by currencyViewModel.currencyRates.collectAsState()
 
-    Log.i("MainActivity", "НАЙДЕНО UI: ${currencyRates.size} items")
-
-    LazyColumn(modifier = Modifier.padding(16.dp)) {
-        items(currencyRates) { rate ->
-            Log.d("CurrencyApi", "КурренсиРейтЛист!!!!")
-            CurrencyRateItem(rate = rate)
+    if (currencyRates.isNotEmpty()){
+        LazyColumn(modifier = Modifier.padding(16.dp)) {
+            items(currencyRates) { rate ->
+                CurrencyRateItem(rate = rate)
+            }
         }
     }
 }
 
+//Элементы списка
 @Composable
 fun CurrencyRateItem(rate: CurrencyRate) {
     Column(modifier = Modifier.padding(bottom = 8.dp)) {
-        Log.d("CurrencyApi", "Создание таблицы начало")
-
+        HorizontalDivider(
+            modifier = Modifier
+            .fillMaxWidth()
+        )
         Text(text = "Date: ${rate.date}", style = MaterialTheme.typography.bodyMedium)
         Text(text = "Rate: ${rate.value}", style = MaterialTheme.typography.bodyMedium)
+    }
+}
 
-        Log.d("CurrencyApi", "Конец создания таблицы")
+//Выпадающий список валют
+@Composable
+fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedCurrency by remember { mutableStateOf("EUR") }
+    val currencyOptions = listOf("EUR", "USD", "JPY", "GBP")
 
+    Box(modifier = Modifier.border(2.dp, Color.Black)) {
+        Text(
+            text = selectedCurrency,
+            modifier = Modifier.clickable { expanded = true }
+                .padding(4.dp)
+                .padding(horizontal = 8.dp)
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            currencyOptions.forEach { currency ->
+                DropdownMenuItem(
+                    text = { Text(text = currency,
+                        modifier = Modifier
+                            .padding(4.dp)
+                    ) },
+                    onClick = {
+                        selectedCurrency = currency
+                        expanded = false
+                        currencyViewModel.changeCurrency(currency)
+                    }
+                )
+            }
+        }
+    }
+}
+
+//Выпадающий список врменных интервалов
+@Composable
+fun TimeDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedTime by remember { mutableStateOf("Неделя") }
+    val timeOptions = listOf("Год", "Пол года", "Три месяца", "Месяц", "Неделя")
+
+    Box(modifier = Modifier.border(2.dp, Color.Black)) {
+        Text(
+            text = selectedTime,
+            modifier = Modifier.clickable { expanded = true }
+                .padding(4.dp)
+                .padding(horizontal = 8.dp)
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            timeOptions.forEach { time ->
+                DropdownMenuItem(
+                    text = { Text(text = time,
+                        modifier = Modifier
+                            .padding(4.dp)
+                    ) },
+                    onClick = {
+                        selectedTime = time
+                        expanded = false
+
+                        currencyViewModel.changeTimeInterval(time) // Вызываем метод в ViewModel
+                        Log.d("TimeDropdown", "Selected time: $selectedTime")
+                    }
+                )
+            }
+        }
+    }
+}
+
+//Нижнее меню
+@Composable
+fun BottomButton(currencyViewModel: CurrencyViewModel = viewModel()) {
+    ConstraintLayout (modifier = Modifier
+        .fillMaxSize()
+    ) {
+        val (box1, box2, box3) = createRefs()
+
+        Box(modifier = Modifier.constrainAs(box1){
+            top.linkTo(parent.top, margin = 12.dp)
+            start.linkTo(parent.start, margin = 24.dp)
+        }){
+            CurrencyDropdown()
+        }
+
+        Box(modifier = Modifier.constrainAs(box2){
+            top.linkTo(parent.top, margin = 12.dp)
+            start.linkTo(box1.end, margin = 24.dp)
+        }){
+            TimeDropdown()
+        }
+
+        Box(modifier = Modifier.constrainAs(box3){
+            top.linkTo(parent.top, margin = 8.dp)
+            end.linkTo(parent.end, margin = 24.dp)
+        })
+        {
+            Button(onClick = {
+                currencyViewModel.loadCurrencyRates()
+            }) {
+                Text( "Приступить",
+                    modifier = Modifier.padding(bottom = 4.dp),
+                    color = Color.Green)
+            }
+        }
     }
 }
