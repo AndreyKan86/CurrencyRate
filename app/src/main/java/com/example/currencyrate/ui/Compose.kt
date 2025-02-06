@@ -2,7 +2,6 @@ package com.example.currencyrate.ui
 
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -16,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerState
@@ -72,9 +70,9 @@ fun MainScaffold(currencyViewModel: CurrencyViewModel = viewModel()) {
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet{
-                DrawerContent { scope.launch { drawerState.close() } }
+                    DrawerContent { scope.launch { drawerState.close() } }
                 }
-                            }
+            }
         )
         {
             Scaffold(
@@ -83,11 +81,9 @@ fun MainScaffold(currencyViewModel: CurrencyViewModel = viewModel()) {
                         title = {
                             TitleTop()
                         },
-
                         navigationIcon = {
                             DrawerMenuBottom(drawerState = drawerState, scope = scope)
                         },
-
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = BlackU,
                             titleContentColor = OrangeU
@@ -107,8 +103,8 @@ fun MainScaffold(currencyViewModel: CurrencyViewModel = viewModel()) {
             ) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
                     CurrencyRateList()
-                    Text("Курс евро")
-                }            }
+                }
+            }
         }
     }
 }
@@ -277,7 +273,7 @@ fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
 fun TimeDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
     var expanded by remember { mutableStateOf(false) }
     var selectedTime by remember { mutableStateOf("Неделя") }
-    val timeOptions = listOf("Год", "Пол года", "Три месяца", "Месяц", "Неделя")
+    val timeOptions = listOf("Год", "Полгода", "Три месяца", "Месяц", "Неделя")
 
     Box(modifier = Modifier.border(2.dp, Color.Black)) {
         Text(

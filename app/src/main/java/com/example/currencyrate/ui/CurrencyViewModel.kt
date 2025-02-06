@@ -1,6 +1,5 @@
 package com.example.currencyrate.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.currencyrate.data.CurrencyRate
@@ -18,12 +17,9 @@ class CurrencyViewModel : ViewModel() {
 
     private val _error = MutableStateFlow<String?>(null)
 
-    val today = LocalDate.now()
     val dayFormatter = DateTimeFormatter.ofPattern("dd")
     val monthFormatter = DateTimeFormatter.ofPattern("M")
     val yearFormatter = DateTimeFormatter.ofPattern("yyyy")
-
-
 
     private val baseUrl = "https://www.val.ru/valhistory.asp?tool="
     private var currencyTool = "978"
@@ -35,7 +31,6 @@ class CurrencyViewModel : ViewModel() {
         updateEndDateUrl()
         changeTimeInterval("Неделя")
     }
-
 
     fun loadCurrencyRates() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -62,7 +57,6 @@ class CurrencyViewModel : ViewModel() {
     }
 
     fun changeTimeInterval(time: String) {
-        Log.d("CurrencyViewModel", "changeTimeInterval called with: $time")
         val today = LocalDate.now()
         val startDate: LocalDate = when (time) {
             "Неделя" -> today.minusWeeks(1)
