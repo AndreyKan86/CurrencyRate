@@ -1,16 +1,18 @@
 package com.example.currencyrate.ui
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -33,9 +35,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,13 +48,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.currencyrate.R
 import com.example.currencyrate.data.CurrencyRate
@@ -104,13 +107,11 @@ fun MainScaffold(currencyViewModel: CurrencyViewModel = viewModel()) {
                     }
                 }
             ) { innerPadding ->
-                Column(modifier = Modifier.padding(innerPadding)) {
-                    CurrencyRateList()
+                MainScreen(currencyViewModel = currencyViewModel, modifier = Modifier.padding(innerPadding))
                 }
             }
         }
     }
-}
 
 //Титульная надпись
 @Composable
@@ -209,7 +210,7 @@ fun DrawerContent(onItemClick: () -> Unit) {
     }
 }
 
-//Список валют
+//Данные
 @Composable
 fun CurrencyRateList(currencyViewModel: CurrencyViewModel = viewModel()) {
     val currencyRates: List<CurrencyRate> by currencyViewModel.currencyRates.collectAsState()
@@ -240,7 +241,7 @@ fun CurrencyRateItem(rate: CurrencyRate) {
 @Composable
 fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedCurrency by remember { mutableStateOf("EUR") }
+    var selectedCurrency by remember { mutableStateOf("Валюта") }
     val currencyOptions = listOf("EUR", "USD", "JPY", "GBP")
 
     Box(modifier = Modifier.border(2.dp, Color.Black)) {
@@ -276,7 +277,7 @@ fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
 @Composable
 fun TimeDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedTime by remember { mutableStateOf("Неделя") }
+    var selectedTime by remember { mutableStateOf("Интервал") }
     val timeOptions = listOf("Год", "Полгода", "Три месяца", "Месяц", "Неделя")
 
     Box(modifier = Modifier.border(2.dp, Color.Black)) {
@@ -344,6 +345,115 @@ fun BottomButton(currencyViewModel: CurrencyViewModel = viewModel()) {
                     modifier = Modifier.padding(bottom = 4.dp),
                     color = Color.Green)
             }
+        }
+    }
+}
+
+//Главный экран
+@Composable
+fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Modifier = Modifier) {
+    ConstraintLayout(modifier = modifier.fillMaxSize()) {
+        val (boxTopLeft, boxTopRight, boxBottomLeft, boxBottomRight, horizontalDivider,
+            vericalDivider, rightTopText) = createRefs()
+        val horizontalGuideline = createGuidelineFromTop(0.5f)
+        val verticalGuideline = createGuidelineFromStart(0.5f)
+
+        val selectedCurrency by currencyViewModel.selectedCurrency.collectAsState()
+        val selectedTimeInterval by currencyViewModel.selectedTimeInterval.collectAsState()
+
+        Box(modifier = Modifier
+            .constrainAs(rightTopText) {
+                top.linkTo(parent.top)
+                start.linkTo(verticalGuideline)
+                end.linkTo(parent.end)
+            }
+            .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        )
+        {
+            Text(
+                text = "Валюта: $selectedCurrency \nВремя: $selectedTimeInterval",
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        Box(modifier = Modifier.constrainAs(boxTopRight){
+            top.linkTo(rightTopText.bottom)
+            bottom.linkTo(horizontalGuideline)
+            start.linkTo(verticalGuideline)
+            end.linkTo(parent.end)
+            width = Dimension.fillToConstraints
+            height = Dimension.fillToConstraints
+        }
+        )
+        {
+            CurrencyRateList()
+        }
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .constrainAs(horizontalDivider) {
+                top.linkTo(horizontalGuideline)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+            }
+            .background(color = Color.Black))
+        {
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+        }
+        Box(Modifier
+            .fillMaxHeight()
+            .constrainAs(vericalDivider) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(verticalGuideline)
+            }
+        ){
+            VerticalDivider(
+                modifier = Modifier
+                    .fillMaxHeight()
+            )
+        }
+        Box(Modifier
+            .fillMaxSize()
+            .constrainAs(boxBottomLeft) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(verticalGuideline)
+                width = Dimension.fillToConstraints
+            })
+        {
+            //Место для кода
+        }
+
+        Box(Modifier
+            .fillMaxSize()
+            .constrainAs(boxBottomRight) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(verticalGuideline)
+                end.linkTo(parent.end)
+                width = Dimension.fillToConstraints
+            })
+        {
+            //Место для функции
+        }
+
+        Box(Modifier
+            .fillMaxSize()
+            .constrainAs(boxTopLeft) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(verticalGuideline)
+                width = Dimension.fillToConstraints
+            })
+        {
+            //Место для функции
         }
     }
 }

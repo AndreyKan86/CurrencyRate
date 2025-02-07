@@ -6,6 +6,7 @@ import com.example.currencyrate.data.CurrencyRate
 import com.example.currencyrate.data.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import okio.IOException
 import org.jsoup.Jsoup
@@ -21,22 +22,32 @@ class CurrencyViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    private val _selectedCurrency = MutableStateFlow("")
+    val selectedCurrency: StateFlow<String> = _selectedCurrency.asStateFlow()
+
+    private val _selectedTimeInterval = MutableStateFlow("")
+    val selectedTimeInterval: StateFlow<String> = _selectedTimeInterval.asStateFlow()
+
     val dayFormatter = DateTimeFormatter.ofPattern("dd")
     val monthFormatter = DateTimeFormatter.ofPattern("M")
     val yearFormatter = DateTimeFormatter.ofPattern("yyyy")
 
     private val baseUrl = "https://www.val.ru/valhistory.asp?tool="
-    private var currencyTool = "978"
+    private var currencyTool = ""
     private var startDateUrl = ""
     private var endDateUrl = ""
     private val otherUrl = "&showchartp=False"
 
     init {
         updateEndDateUrl()
-        changeTimeInterval("Неделя")
     }
 
     fun loadCurrencyRates() {
+        if (_selectedCurrency.value.isBlank() || _selectedTimeInterval.value.isBlank()) {
+            _error.value = "Выберите валюту и временной интервал"
+            _currencyRates.value = emptyList()
+            return
+        }
         viewModelScope.launch {
             try {
                 val fullUrl = baseUrl + currencyTool + startDateUrl + endDateUrl + otherUrl
@@ -47,6 +58,7 @@ class CurrencyViewModel : ViewModel() {
                 } else {
                     val rates = parseHtml(html)
                     _currencyRates.value = rates
+
                 }
             } catch (e: IOException) {
                 _error.value = "Ошибка сети: проверьте подключение к интернету"
@@ -68,7 +80,7 @@ class CurrencyViewModel : ViewModel() {
             throw Exception("Не удалось получить данные")
         }
 
-        for (i in 1 until tableRows.size) {
+        for (i in 0 until tableRows.size) {
             val row = tableRows[i]
             val columns = row.select("td")
             if (columns.size >= 2) {
@@ -88,6 +100,7 @@ class CurrencyViewModel : ViewModel() {
             "GBP" -> "826"
             else -> "978"
         }
+        _selectedCurrency.value = currency
     }
 
     fun changeTimeInterval(time: String) {
@@ -101,6 +114,7 @@ class CurrencyViewModel : ViewModel() {
             else -> today.minusWeeks(1)
         }
         startDateUrl = "&bd=${startDate.format(dayFormatter)}&bm=${startDate.format(monthFormatter)}&by=${startDate.format(yearFormatter)}"
+        _selectedTimeInterval.value = time
     }
 
     private fun updateEndDateUrl() {

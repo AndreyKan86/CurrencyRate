@@ -3,7 +3,6 @@ package com.example.currencyrate.data
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
-
 object RetrofitInstance {
     private const val BASE_URL = "https://www.val.ru/"
 
