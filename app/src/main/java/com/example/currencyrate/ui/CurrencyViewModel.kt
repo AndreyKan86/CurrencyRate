@@ -7,7 +7,10 @@ import com.example.currencyrate.data.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
+import okio.IOException
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.select.Elements
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -16,6 +19,7 @@ class CurrencyViewModel : ViewModel() {
     val currencyRates: StateFlow<List<CurrencyRate>> = _currencyRates
 
     private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
 
     val dayFormatter = DateTimeFormatter.ofPattern("dd")
     val monthFormatter = DateTimeFormatter.ofPattern("M")
@@ -33,17 +37,47 @@ class CurrencyViewModel : ViewModel() {
     }
 
     fun loadCurrencyRates() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
                 val fullUrl = baseUrl + currencyTool + startDateUrl + endDateUrl + otherUrl
-                val rates = RetrofitInstance.api.getCurrencyRates(fullUrl)
-                _currencyRates.value = rates
+                val html = RetrofitInstance.api.getCurrencyRates(fullUrl)
+                if (html.isEmpty()){
+                    _error.value = "Страница пустая"
+                    _currencyRates.value = emptyList()
+                } else {
+                    val rates = parseHtml(html)
+                    _currencyRates.value = rates
+                }
+            } catch (e: IOException) {
+                _error.value = "Ошибка сети: проверьте подключение к интернету"
+                _currencyRates.value = emptyList()
             } catch (e: Exception) {
                 e.printStackTrace()
+                _error.value = "Неизвестная ошибка: ${e.message}"
                 _currencyRates.value = emptyList()
-                _error.value = "Ошибка при загрузке данных: ${e.message}"
             }
         }
+    }
+
+    private fun parseHtml(html: String): List<CurrencyRate> {
+        val currencyRates = mutableListOf<CurrencyRate>()
+        val doc: Document = Jsoup.parse(html)
+
+        val tableRows: Elements = doc.select(".gfcont table tr")
+        if (tableRows.isEmpty()){
+            throw Exception("Не удалось получить данные")
+        }
+
+        for (i in 1 until tableRows.size) {
+            val row = tableRows[i]
+            val columns = row.select("td")
+            if (columns.size >= 2) {
+                val date = columns[0].text()
+                val rate = columns[2].text()
+                currencyRates.add(CurrencyRate(date, rate))
+            }
+        }
+        return currencyRates
     }
 
     fun changeCurrency(currency: String) {
@@ -73,4 +107,5 @@ class CurrencyViewModel : ViewModel() {
         val today = LocalDate.now()
         endDateUrl = "&ed=${today.format(dayFormatter)}&em=${today.format(monthFormatter)}&ey=${today.format(yearFormatter)}"
     }
+
 }

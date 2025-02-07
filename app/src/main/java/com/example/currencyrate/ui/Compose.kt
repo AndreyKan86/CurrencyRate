@@ -1,6 +1,7 @@
 package com.example.currencyrate.ui
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextDecoration
@@ -243,7 +246,8 @@ fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
     Box(modifier = Modifier.border(2.dp, Color.Black)) {
         Text(
             text = selectedCurrency,
-            modifier = Modifier.clickable { expanded = true }
+            modifier = Modifier
+                .clickable { expanded = true }
                 .padding(4.dp)
                 .padding(horizontal = 8.dp)
         )
@@ -278,7 +282,8 @@ fun TimeDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
     Box(modifier = Modifier.border(2.dp, Color.Black)) {
         Text(
             text = selectedTime,
-            modifier = Modifier.clickable { expanded = true }
+            modifier = Modifier
+                .clickable { expanded = true }
                 .padding(4.dp)
                 .padding(horizontal = 8.dp)
         )
@@ -342,3 +347,4 @@ fun BottomButton(currencyViewModel: CurrencyViewModel = viewModel()) {
         }
     }
 }
+
