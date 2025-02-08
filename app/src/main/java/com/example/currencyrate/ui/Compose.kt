@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -20,6 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
@@ -48,8 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.modifier.modifierLocalMapOf
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -91,14 +96,14 @@ fun MainScaffold(currencyViewModel: CurrencyViewModel = viewModel()) {
                             DrawerMenuBottom(drawerState = drawerState, scope = scope)
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = BlackU,
-                            titleContentColor = OrangeU
+                            containerColor = BlueU,
+                            titleContentColor = GoldU
                         )
                     )
                 },
                 bottomBar = {
                     BottomAppBar(
-                        containerColor = Color.Blue,
+                        containerColor = BlueU,
                         contentColor = Color.White
                     ) {
 
@@ -121,7 +126,9 @@ fun TitleTop() {
         .padding(end = 26.dp)
         .fillMaxWidth(),
         contentAlignment = Alignment.Center){
-        Text("Курс валют")
+        Text("Курс валют",
+            style = TextStyle(fontFamily = Montserrat, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+        )
     }
 }
 
@@ -181,7 +188,7 @@ fun DrawerContent(onItemClick: () -> Unit) {
                     color = Color.DarkGray,
                     fontSize = 24.sp,
                     textDecoration = TextDecoration.Underline,
-                    fontFamily = FontFamily.Cursive
+                    fontFamily = Roboto
                 )
             }
             HorizontalDivider(
@@ -232,8 +239,8 @@ fun CurrencyRateItem(rate: CurrencyRate) {
             modifier = Modifier
             .fillMaxWidth()
         )
-        Text(text = "Date: ${rate.date}", style = MaterialTheme.typography.bodyMedium)
-        Text(text = "Rate: ${rate.value}", style = MaterialTheme.typography.bodyMedium)
+        Text(text = "Date: ${rate.date}", style = MaterialTheme.typography.bodyMedium, fontFamily = Roboto)
+        Text(text = "Rate: ${rate.value}", style = MaterialTheme.typography.bodyMedium, fontFamily = Roboto)
     }
 }
 
@@ -244,13 +251,18 @@ fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
     var selectedCurrency by remember { mutableStateOf("Валюта") }
     val currencyOptions = listOf("EUR", "USD", "JPY", "GBP")
 
-    Box(modifier = Modifier.border(2.dp, Color.Black)) {
+    Card(modifier = Modifier,
+        colors = CardDefaults.cardColors(containerColor = VioletU)
+    )
+    {
         Text(
             text = selectedCurrency,
             modifier = Modifier
                 .clickable { expanded = true }
-                .padding(4.dp)
-                .padding(horizontal = 8.dp)
+                .padding(6.dp)
+                .padding(horizontal = 8.dp),
+            fontFamily = Montserrat,
+            color = GoldU
         )
         DropdownMenu(
             expanded = expanded,
@@ -260,7 +272,9 @@ fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
                 DropdownMenuItem(
                     text = { Text(text = currency,
                         modifier = Modifier
-                            .padding(4.dp)
+                            .padding(4.dp),
+                        fontFamily = Montserrat,
+                        color = GoldU
                     ) },
                     onClick = {
                         selectedCurrency = currency
@@ -277,16 +291,20 @@ fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
 @Composable
 fun TimeDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedTime by remember { mutableStateOf("Интервал") }
+    var selectedTime by remember { mutableStateOf("Период") }
     val timeOptions = listOf("Год", "Полгода", "Три месяца", "Месяц", "Неделя")
 
-    Box(modifier = Modifier.border(2.dp, Color.Black)) {
+    Card(modifier = Modifier,
+        colors = CardDefaults.cardColors(containerColor = VioletU)
+    ) {
         Text(
             text = selectedTime,
             modifier = Modifier
                 .clickable { expanded = true }
-                .padding(4.dp)
-                .padding(horizontal = 8.dp)
+                .padding(6.dp)
+                .padding(horizontal = 8.dp),
+            fontFamily = Montserrat,
+            color = GoldU
         )
         DropdownMenu(
             expanded = expanded,
@@ -296,14 +314,15 @@ fun TimeDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
                 DropdownMenuItem(
                     text = { Text(text = time,
                         modifier = Modifier
-                            .padding(4.dp)
+                            .padding(4.dp),
+                        fontFamily = Montserrat,
+                        color = GoldU
                     ) },
                     onClick = {
                         selectedTime = time
                         expanded = false
 
-                        currencyViewModel.changeTimeInterval(time) // Вызываем метод в ViewModel
-                        Log.d("TimeDropdown", "Selected time: $selectedTime")
+                        currencyViewModel.changeTimeInterval(time)
                     }
                 )
             }
@@ -328,7 +347,7 @@ fun BottomButton(currencyViewModel: CurrencyViewModel = viewModel()) {
 
         Box(modifier = Modifier.constrainAs(box2){
             top.linkTo(parent.top, margin = 12.dp)
-            start.linkTo(box1.end, margin = 24.dp)
+            start.linkTo(parent.start, margin = 160.dp)
         }){
             TimeDropdown()
         }
@@ -340,10 +359,13 @@ fun BottomButton(currencyViewModel: CurrencyViewModel = viewModel()) {
         {
             Button(onClick = {
                 currencyViewModel.loadCurrencyRates()
-            }) {
+            },
+                colors = ButtonDefaults.buttonColors(containerColor = VioletU) ) {
                 Text( "Приступить",
-                    modifier = Modifier.padding(bottom = 4.dp),
-                    color = Color.Green)
+                    modifier = Modifier.padding(bottom = 2.dp),
+                    fontFamily = Montserrat,
+                    color = GoldU
+                    )
             }
         }
     }
@@ -352,7 +374,9 @@ fun BottomButton(currencyViewModel: CurrencyViewModel = viewModel()) {
 //Главный экран
 @Composable
 fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Modifier = Modifier) {
-    ConstraintLayout(modifier = modifier.fillMaxSize()) {
+    ConstraintLayout(modifier = modifier
+        .fillMaxSize()
+        .background(GreyU)) {
         val (boxTopLeft, boxTopRight, boxBottomLeft, boxBottomRight, horizontalDivider,
             vericalDivider, rightTopText) = createRefs()
         val horizontalGuideline = createGuidelineFromTop(0.5f)
@@ -372,9 +396,10 @@ fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Mod
         )
         {
             Text(
-                text = "Валюта: $selectedCurrency \nВремя: $selectedTimeInterval",
+                text = "Валюта: $selectedCurrency \nПериод: $selectedTimeInterval",
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
+                fontFamily = Montserrat
             )
         }
 
