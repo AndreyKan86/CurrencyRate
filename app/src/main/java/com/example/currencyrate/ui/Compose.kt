@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.text.TextStyle
@@ -74,6 +75,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import java.time.LocalDate
 import kotlin.text.toFloat
 
 //Основное поле
@@ -163,6 +165,8 @@ fun DrawerMenuBottom(drawerState: DrawerState,
 //Содержимое выплывающего меню
 @Composable
 fun DrawerContent(onItemClick: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+
     ModalDrawerSheet()
     {
         ConstraintLayout()
@@ -181,6 +185,7 @@ fun DrawerContent(onItemClick: () -> Unit) {
                         .size(80.dp)
                         .border(2.dp, Color.DarkGray, CircleShape)
                         .clip(CircleShape)
+                        .clickable { uriHandler.openUri("https://t.me/tumultuari") }
                 )
             }
             Box(
@@ -329,7 +334,6 @@ fun TimeDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
                     onClick = {
                         selectedTime = time
                         expanded = false
-
                         currencyViewModel.changeTimeInterval(time)
                     }
                 )
@@ -357,7 +361,7 @@ fun BottomButton(currencyViewModel: CurrencyViewModel = viewModel()) {
             top.linkTo(parent.top, margin = 12.dp)
             start.linkTo(parent.start, margin = 160.dp)
         }){
-            TimeDropdown()
+            TimeDropdown(currencyViewModel)
         }
 
         Box(modifier = Modifier.constrainAs(box3){
@@ -479,30 +483,82 @@ fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Mod
     }
 }
 
+//Легенда
 @Composable
-fun Legend (viewModel: CurrencyViewModel = viewModel()){
-    val currencyRates by viewModel.currencyRates.collectAsState()
-    val filteredCurrencyRates by viewModel.filteredCurrencyRates.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val selectedCurrency by viewModel.selectedCurrency.collectAsState()
-    val selectedTimeInterval by viewModel.selectedTimeInterval.collectAsState()
-    val predictedValue = viewModel.getPredictedValueForNextDay()
-    LaunchedEffect(selectedCurrency, selectedTimeInterval) {
-        viewModel.loadCurrencyRates()
-    }
-    Column {
-        val predictedValue = viewModel.getPredictedValueForNextDay()
-        if (predictedValue != null) {
-            Text(text = "Предсказанное значение на следующий день: $predictedValue")
-        } else {
-            Text(text = "Не удалось получить предсказанное значение")
+fun Legend (currencyViewModel: CurrencyViewModel = viewModel()){
+    val today = LocalDate.now()
+    val error by currencyViewModel.error.collectAsState()
+    val predictedValue by currencyViewModel.predictedValue.collectAsState()
+    val selectedCurrency by currencyViewModel.selectedCurrency.collectAsState()
+
+    val currencyImageMap = mapOf(
+        "USD" to R.drawable.usd,
+        "EUR" to R.drawable.eur,
+        "JPY" to R.drawable.jpy,
+        "GBP" to R.drawable.gbp,
+    )
+
+    val selectedCurrencyImage = currencyImageMap[selectedCurrency]
+    val imageToDisplay = selectedCurrencyImage ?: R.drawable.logo
+
+
+    ConstraintLayout(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        val (textRef, columnRef, imageRef) = createRefs()
+
+        Box(
+            modifier = Modifier
+                .constrainAs(textRef) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ){
+            Text(text ="ЛЕГЕНДА",
+                fontSize = 20.sp,
+                fontFamily = Montserrat)
         }
-        if (error != null) {
-            Text(text = "Ошибка: $error")
+
+        Box(
+            modifier = Modifier
+                .constrainAs(imageRef) {
+                    bottom.linkTo(parent.bottom, margin = 16.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                    painter = painterResource(id = imageToDisplay),
+                    contentDescription = "$selectedCurrency Logo",
+                    modifier = Modifier
+                        .size(200.dp)
+            )
+        }
+        Box (
+            modifier = Modifier.constrainAs(columnRef){
+                start.linkTo(parent.start)
+                top.linkTo(textRef.bottom)
+                end.linkTo(parent.end)
+            }
+        ) {
+            Column {
+                predictedValue?.let {
+                    val roundedPredictedValue = String.format("%.2f", it)
+                    Text(text = "Прогноз: ${today.plusDays(1)}: $roundedPredictedValue")
+                } ?: Text(text = "Нет прогноза.")
+
+                if (error != null) {
+                    Text(text = "Ошибка: $error")
+                }
+            }
         }
     }
 }
-
 
 //Построение графика
 @Composable

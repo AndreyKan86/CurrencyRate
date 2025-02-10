@@ -37,6 +37,8 @@ class CurrencyViewModel : ViewModel() {
     private val _filteredCurrencyRates = MutableStateFlow<List<Double>>(emptyList())
     val filteredCurrencyRates: StateFlow<List<Double>> = _filteredCurrencyRates.asStateFlow()
 
+    private val _predictedValue = MutableStateFlow<Double?>(null)
+    val predictedValue: StateFlow<Double?> = _predictedValue.asStateFlow()
 
     val dayFormatter = DateTimeFormatter.ofPattern("dd")
     val monthFormatter = DateTimeFormatter.ofPattern("M")
@@ -47,11 +49,12 @@ class CurrencyViewModel : ViewModel() {
     private var startDateUrl = ""
     private var endDateUrl = ""
     private val otherUrl = "&showchartp=False"
+    private lateinit var ekf: ExtendedKalmanFilter
 
     init {
         updateEndDateUrl()
+        initializeKalmanFilter()
     }
-
     fun loadCurrencyRates() {
         if (_selectedCurrency.value.isBlank() || _selectedTimeInterval.value.isBlank()) {
             _error.value = "Выберите валюту и временной интервал"
@@ -69,6 +72,7 @@ class CurrencyViewModel : ViewModel() {
                     val rates = parseHtml(html)
                     _currencyRates.value = rates
                     applyKalmanFilter(rates)
+                    _predictedValue.value = getPredictedValueForNextDay()
                 }
             } catch (e: IOException) {
                 _error.value = "Ошибка сети: проверьте подключение к интернету"
@@ -130,14 +134,6 @@ class CurrencyViewModel : ViewModel() {
     private fun updateEndDateUrl() {
         val today = LocalDate.now()
         endDateUrl = "&ed=${today.format(dayFormatter)}&em=${today.format(monthFormatter)}&ey=${today.format(yearFormatter)}"
-    }
-
-
-    private lateinit var ekf: ExtendedKalmanFilter
-
-    init {
-        updateEndDateUrl()
-        initializeKalmanFilter()
     }
 
     fun getPredictedValueForNextDay(): Double? {
