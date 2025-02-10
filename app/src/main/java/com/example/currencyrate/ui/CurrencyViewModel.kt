@@ -109,7 +109,7 @@ class CurrencyViewModel : ViewModel() {
             "Неделя" -> today.minusWeeks(1)
             "Месяц" -> today.minusMonths(1)
             "Три месяца" -> today.minusMonths(3)
-            "Пол года" -> today.minusMonths(6)
+            "Полгода" -> today.minusMonths(6)
             "Год" -> today.minusYears(1)
             else -> today.minusWeeks(1)
         }

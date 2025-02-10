@@ -1,12 +1,12 @@
 package com.example.currencyrate.ui
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,23 +50,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalMapOf
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.core.text.color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.currencyrate.R
 import com.example.currencyrate.data.CurrencyRate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.example.currencyrate.ui.theme.*
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 
 //Основное поле
 @OptIn(ExperimentalMaterial3Api::class)
@@ -377,7 +382,7 @@ fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Mod
     ConstraintLayout(modifier = modifier
         .fillMaxSize()
         .background(GreyU)) {
-        val (boxTopLeft, boxTopRight, boxBottomLeft, boxBottomRight, horizontalDivider,
+        val (boxTopLeft, boxTopRight, boxBottom,  horizontalDivider,
             vericalDivider, rightTopText) = createRefs()
         val horizontalGuideline = createGuidelineFromTop(0.5f)
         val verticalGuideline = createGuidelineFromStart(0.5f)
@@ -430,11 +435,11 @@ fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Mod
             )
         }
         Box(Modifier
-            .fillMaxHeight()
             .constrainAs(vericalDivider) {
                 top.linkTo(parent.top)
-                bottom.linkTo(parent.bottom)
+                bottom.linkTo(horizontalDivider.top)
                 start.linkTo(verticalGuideline)
+                height = Dimension.fillToConstraints
             }
         ){
             VerticalDivider(
@@ -442,44 +447,83 @@ fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Mod
                     .fillMaxHeight()
             )
         }
-        Box(Modifier
-            .fillMaxSize()
-            .constrainAs(boxBottomLeft) {
-                top.linkTo(parent.top)
-                bottom.linkTo(parent.bottom)
-                start.linkTo(parent.start)
-                end.linkTo(verticalGuideline)
-                width = Dimension.fillToConstraints
-            })
-        {
-            //Место для кода
-        }
 
         Box(Modifier
-            .fillMaxSize()
-            .constrainAs(boxBottomRight) {
-                top.linkTo(parent.top)
-                bottom.linkTo(parent.bottom)
-                start.linkTo(verticalGuideline)
-                end.linkTo(parent.end)
-                width = Dimension.fillToConstraints
-            })
-        {
-            //Место для функции
-        }
-
-        Box(Modifier
-            .fillMaxSize()
             .constrainAs(boxTopLeft) {
                 top.linkTo(parent.top)
-                bottom.linkTo(parent.bottom)
+                bottom.linkTo(horizontalDivider.top)
                 start.linkTo(parent.start)
                 end.linkTo(verticalGuideline)
                 width = Dimension.fillToConstraints
+                height = Dimension.fillToConstraints
             })
         {
             //Место для функции
+        }
+
+        Box(Modifier
+            .constrainAs(boxBottom) {
+                top.linkTo(horizontalDivider.bottom)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                width = Dimension.fillToConstraints
+                height = Dimension.fillToConstraints
+            })
+        {
+            CurrencyGraf()
         }
     }
 }
 
+@Composable
+fun CurrencyGraf(currencyViewModel: CurrencyViewModel = viewModel()) {
+    val currencyRates: List<CurrencyRate> by currencyViewModel.currencyRates.collectAsState()
+
+    if (currencyRates.isNotEmpty()) {
+        val chartData = currencyRates.mapIndexed { index, rate ->
+            Pair(index.toFloat(), rate.value.toFloat())
+        }
+        MPLineChart(data = chartData)
+    }
+}
+
+@Composable
+fun MPLineChart(data: List<Pair<Float, Float>>) {
+    AndroidView(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        factory = { context ->
+            LineChart(context).apply {
+                description.isEnabled = false
+                setTouchEnabled(true)
+                isDragEnabled = true
+                setScaleEnabled(true)
+                setPinchZoom(true)
+                setBackgroundColor(android.graphics.Color.WHITE)
+            }
+        },
+        update = { chart ->
+            val entries = data.map { Entry(it.first, it.second) }
+            val dataSet = LineDataSet(entries, "Курс валюты")
+            dataSet.color = android.graphics.Color.RED // Устанавливаем красный цвет для линии графика
+            dataSet.setCircleColor(android.graphics.Color.RED) // Устанавливаем красный цвет для точек на линии
+            dataSet.lineWidth = 1f // Устанавливаем толщину линии в 2 единицы
+            dataSet.circleRadius = 2f // Устанавливаем радиус точек в 4 единицы
+            dataSet.setDrawCircleHole(false) // Отключаем отрисовку отверстий в точках
+            dataSet.valueTextSize = 8f // Устанавливаем размер текста значений над точками
+            dataSet.setDrawFilled(false) // Включаем заливку под линией
+            dataSet.fillColor = android.graphics.Color.argb(100, 255, 0, 0) // Устанавливаем цвет заливки (красный с прозрачностью 100)
+            // Создаем список наборов данных (может быть несколько на одном графике)
+            val dataSets = ArrayList<ILineDataSet>()
+            dataSets.add(dataSet) // Добавляем наш набор данных в список
+            // Создаем объект LineData, который содержит все наборы данных
+            val lineData = LineData(dataSets)
+            // Устанавливаем данные для графика
+            chart.data = lineData
+            // Обновляем (перерисовываем) график
+            chart.invalidate()
+        }
+    )
+}
