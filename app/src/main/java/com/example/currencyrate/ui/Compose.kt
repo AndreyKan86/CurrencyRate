@@ -40,6 +40,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,6 +74,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import kotlin.text.toFloat
 
 //Основное поле
 @OptIn(ExperimentalMaterial3Api::class)
@@ -458,7 +461,7 @@ fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Mod
                 height = Dimension.fillToConstraints
             })
         {
-            //Место для функции
+            Legend()
         }
 
         Box(Modifier
@@ -477,19 +480,50 @@ fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Mod
 }
 
 @Composable
-fun CurrencyGraf(currencyViewModel: CurrencyViewModel = viewModel()) {
-    val currencyRates: List<CurrencyRate> by currencyViewModel.currencyRates.collectAsState()
-
-    if (currencyRates.isNotEmpty()) {
-        val chartData = currencyRates.mapIndexed { index, rate ->
-            Pair(index.toFloat(), rate.value.toFloat())
+fun Legend (viewModel: CurrencyViewModel = viewModel()){
+    val currencyRates by viewModel.currencyRates.collectAsState()
+    val filteredCurrencyRates by viewModel.filteredCurrencyRates.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val selectedCurrency by viewModel.selectedCurrency.collectAsState()
+    val selectedTimeInterval by viewModel.selectedTimeInterval.collectAsState()
+    val predictedValue = viewModel.getPredictedValueForNextDay()
+    LaunchedEffect(selectedCurrency, selectedTimeInterval) {
+        viewModel.loadCurrencyRates()
+    }
+    Column {
+        val predictedValue = viewModel.getPredictedValueForNextDay()
+        if (predictedValue != null) {
+            Text(text = "Предсказанное значение на следующий день: $predictedValue")
+        } else {
+            Text(text = "Не удалось получить предсказанное значение")
         }
-        MPLineChart(data = chartData)
+        if (error != null) {
+            Text(text = "Ошибка: $error")
+        }
     }
 }
 
+
+//Построение графика
 @Composable
-fun MPLineChart(data: List<Pair<Float, Float>>) {
+fun CurrencyGraf(currencyViewModel: CurrencyViewModel = viewModel()) {
+    val currencyRates: List<CurrencyRate> by currencyViewModel.currencyRates.collectAsState()
+    val filteredCurrencyRates: List<Double> by currencyViewModel.filteredCurrencyRates.collectAsState()
+
+    if (currencyRates.isNotEmpty() && filteredCurrencyRates.isNotEmpty()) {
+        val chartData = currencyRates.mapIndexed { index, rate ->
+            Pair(index.toFloat(), rate.value.toFloat())
+        }
+        val filteredChartData = filteredCurrencyRates.mapIndexed { index, rate ->
+            Pair(index.toFloat(), rate.toFloat())
+        }
+        MPLineChart(data = chartData, filteredData = filteredChartData)
+    }
+}
+
+//График
+@Composable
+fun MPLineChart(data: List<Pair<Float, Float>>, filteredData: List<Pair<Float, Float>>) {
     AndroidView(
         modifier = Modifier
             .fillMaxSize()
@@ -507,23 +541,36 @@ fun MPLineChart(data: List<Pair<Float, Float>>) {
         update = { chart ->
             val entries = data.map { Entry(it.first, it.second) }
             val dataSet = LineDataSet(entries, "Курс валюты")
-            dataSet.color = android.graphics.Color.RED // Устанавливаем красный цвет для линии графика
-            dataSet.setCircleColor(android.graphics.Color.RED) // Устанавливаем красный цвет для точек на линии
-            dataSet.lineWidth = 1f // Устанавливаем толщину линии в 2 единицы
-            dataSet.circleRadius = 2f // Устанавливаем радиус точек в 4 единицы
-            dataSet.setDrawCircleHole(false) // Отключаем отрисовку отверстий в точках
-            dataSet.valueTextSize = 8f // Устанавливаем размер текста значений над точками
-            dataSet.setDrawFilled(false) // Включаем заливку под линией
-            dataSet.fillColor = android.graphics.Color.argb(100, 255, 0, 0) // Устанавливаем цвет заливки (красный с прозрачностью 100)
-            // Создаем список наборов данных (может быть несколько на одном графике)
+            dataSet.color = android.graphics.Color.RED
+            dataSet.setCircleColor(android.graphics.Color.RED)
+            dataSet.lineWidth = 1f
+            dataSet.circleRadius = 2f
+            dataSet.setDrawCircleHole(false)
+            dataSet.valueTextSize = 8f
+            dataSet.setDrawFilled(false)
+            dataSet.fillColor = android.graphics.Color.argb(100, 255, 0, 0)
+
+            val filteredEntries = filteredData.map { Entry(it.first, it.second) }
+            val filteredDataSet = LineDataSet(filteredEntries, "Фильтр Калмана")
+            filteredDataSet.color = android.graphics.Color.BLUE
+            filteredDataSet.setCircleColor(android.graphics.Color.BLUE)
+            filteredDataSet.lineWidth = 2f
+            filteredDataSet.circleRadius = 3f
+            filteredDataSet.setDrawCircleHole(false)
+            filteredDataSet.valueTextSize = 8f
+            filteredDataSet.setDrawFilled(false)
+            filteredDataSet.fillColor = android.graphics.Color.argb(100, 0, 0, 255)
+
             val dataSets = ArrayList<ILineDataSet>()
-            dataSets.add(dataSet) // Добавляем наш набор данных в список
-            // Создаем объект LineData, который содержит все наборы данных
+            dataSets.add(dataSet)
+            dataSets.add(filteredDataSet)
+
             val lineData = LineData(dataSets)
-            // Устанавливаем данные для графика
+
             chart.data = lineData
-            // Обновляем (перерисовываем) график
+
             chart.invalidate()
         }
     )
 }
+
