@@ -55,6 +55,7 @@ class CurrencyViewModel : ViewModel() {
         updateEndDateUrl()
         initializeKalmanFilter()
     }
+    
     fun loadCurrencyRates() {
         if (_selectedCurrency.value.isBlank() || _selectedTimeInterval.value.isBlank()) {
             _error.value = "Выберите валюту и временной интервал"
@@ -191,20 +192,22 @@ class CurrencyViewModel : ViewModel() {
                 return
             }
         }
+        val reversedDoubleRates = doubleRates.reversed()
 
         val filteredRates = mutableListOf<Double>()
         try {
-            if (doubleRates.size >= 2) {
-                val initialVelocity = doubleRates[1] - doubleRates[0]
-                ekf.setState(doubleRates[0], initialVelocity)
+            if (reversedDoubleRates.size >= 2) {
+                val initialVelocity = reversedDoubleRates[1] - reversedDoubleRates[0]
+                ekf.setState(reversedDoubleRates[0], initialVelocity)
 
-                for (rate in doubleRates) {
+                for (rate in reversedDoubleRates) {
                     ekf.predict()
                     ekf.update(ArrayRealVector(doubleArrayOf(rate)))
                     filteredRates.add(ekf.getState())
                 }
-                _filteredCurrencyRates.value = filteredRates
+                _filteredCurrencyRates.value = filteredRates.reversed()
             } else {
+                _error.value = "Недостаточно данных для применения фильтра Калмана"
                 _filteredCurrencyRates.value = emptyList()
             }
         } catch (e: Exception) {
@@ -213,7 +216,6 @@ class CurrencyViewModel : ViewModel() {
             _filteredCurrencyRates.value = emptyList()
         }
     }
-
     class ExtendedKalmanFilter(
         private val f: (RealVector) -> RealVector,
         private val h: (RealVector) -> RealVector,

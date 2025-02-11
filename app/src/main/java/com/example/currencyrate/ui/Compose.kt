@@ -565,15 +565,23 @@ fun Legend (currencyViewModel: CurrencyViewModel = viewModel()){
 fun CurrencyGraf(currencyViewModel: CurrencyViewModel = viewModel()) {
     val currencyRates: List<CurrencyRate> by currencyViewModel.currencyRates.collectAsState()
     val filteredCurrencyRates: List<Double> by currencyViewModel.filteredCurrencyRates.collectAsState()
+    val error by currencyViewModel.error.collectAsState()
 
     if (currencyRates.isNotEmpty() && filteredCurrencyRates.isNotEmpty()) {
-        val chartData = currencyRates.mapIndexed { index, rate ->
+        val reversedCurrencyRates = currencyRates.reversed()
+
+        val chartData = reversedCurrencyRates.mapIndexed { index, rate ->
             Pair(index.toFloat(), rate.value.toFloat())
         }
-        val filteredChartData = filteredCurrencyRates.mapIndexed { index, rate ->
+        val reversedFilteredCurrencyRates = filteredCurrencyRates.reversed()
+        val filteredChartData = reversedFilteredCurrencyRates.mapIndexed { index, rate ->
             Pair(index.toFloat(), rate.toFloat())
         }
         MPLineChart(data = chartData, filteredData = filteredChartData)
+    } else {
+        if (error != null) {
+            Text(text = "Ошибка: $error")
+        }
     }
 }
 
