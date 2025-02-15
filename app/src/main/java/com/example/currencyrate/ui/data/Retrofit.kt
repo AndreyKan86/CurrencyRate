@@ -1,4 +1,4 @@
-package com.example.currencyrate.data
+package com.example.currencyrate.ui.data
 
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory

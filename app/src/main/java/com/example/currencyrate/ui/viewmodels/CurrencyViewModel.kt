@@ -1,9 +1,12 @@
-package com.example.currencyrate.ui
+package com.example.currencyrate.ui.viewmodels
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.currencyrate.data.CurrencyRate
-import com.example.currencyrate.data.RetrofitInstance
+import com.example.currencyrate.ui.data.CurrencyRate
+import com.example.currencyrate.ui.data.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,9 +54,16 @@ class CurrencyViewModel : ViewModel() {
     private val otherUrl = "&showchartp=False"
     private lateinit var ekf: ExtendedKalmanFilter
 
+    var isDarkTheme by mutableStateOf(true)
+        private set
+
     init {
         updateEndDateUrl()
         initializeKalmanFilter()
+    }
+
+    fun toggleTheme() {
+        isDarkTheme = !isDarkTheme
     }
 
     fun loadCurrencyRates() {
@@ -216,6 +226,7 @@ class CurrencyViewModel : ViewModel() {
             _filteredCurrencyRates.value = emptyList()
         }
     }
+
     class ExtendedKalmanFilter(
         private val f: (RealVector) -> RealVector,
         private val h: (RealVector) -> RealVector,

@@ -1,4 +1,4 @@
-package com.example.currencyrate.data
+package com.example.currencyrate.ui.data
 
 data class CurrencyRate(
     val date: String,
