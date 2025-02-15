@@ -55,7 +55,7 @@ class CurrencyViewModel : ViewModel() {
         updateEndDateUrl()
         initializeKalmanFilter()
     }
-    
+
     fun loadCurrencyRates() {
         if (_selectedCurrency.value.isBlank() || _selectedTimeInterval.value.isBlank()) {
             _error.value = "Выберите валюту и временной интервал"
