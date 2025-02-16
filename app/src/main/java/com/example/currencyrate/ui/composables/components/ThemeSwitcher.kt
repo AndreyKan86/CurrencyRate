@@ -18,9 +18,10 @@ fun ThemeSwitcher(
     onThemeChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     Row(modifier = modifier.padding(16.dp)) {
         Text(
-            text = if (isDarkTheme) "Dark" else "Light",
+            text = if (isDarkTheme) "Light" else "Dark",
             modifier = Modifier.padding(end = 8.dp),
             color = MaterialTheme.colorScheme.onBackground
         )

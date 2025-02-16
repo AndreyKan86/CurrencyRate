@@ -4,6 +4,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +27,7 @@ fun CurrencyDropdown(currencyViewModel: CurrencyViewModel = viewModel()) {
     val currencyOptions = listOf("EUR", "USD", "JPY", "GBP")
 
     Card(modifier = Modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.DarkGray)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary)
     )
     {
         Text(

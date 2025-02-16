@@ -9,6 +9,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
@@ -31,6 +33,7 @@ fun DrawerContent(onItemClick: () -> Unit)
 {
     val uriHandler = LocalUriHandler.current
     val viewModel: CurrencyViewModel = viewModel()
+    val isDarkTheme by viewModel.isDarkTheme.collectAsState()
 
     ModalDrawerSheet()
     {
@@ -39,18 +42,16 @@ fun DrawerContent(onItemClick: () -> Unit)
             val (logo, nameCompany, upDivider, bottomDivider, textDescription, themeswitch) = createRefs()
 
             Box(
-                modifier = Modifier.constrainAs(themeswitch){
+                modifier = Modifier.constrainAs(themeswitch) {
                     top.linkTo(parent.top, margin = 16.dp)
                     end.linkTo(parent.end, margin = 16.dp)
                 }
-            )
-            {
+            ) {
                 ThemeSwitcher(
-                    isDarkTheme = viewModel.isDarkTheme,
+                    isDarkTheme = !isDarkTheme, // Используем полученное значение
                     onThemeChanged = { viewModel.toggleTheme() }
                 )
             }
-
             Box(
                 modifier = Modifier.constrainAs(logo){
                     top.linkTo(parent.top, margin = 16.dp)

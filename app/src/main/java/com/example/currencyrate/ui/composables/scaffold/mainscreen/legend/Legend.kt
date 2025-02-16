@@ -88,7 +88,7 @@ fun Legend (currencyViewModel: CurrencyViewModel = viewModel()){
             Column {
                 predictedValue?.let {
                     val roundedPredictedValue = String.format("%.2f", it)
-                    Text(text = "Прогноз: ${today.plusDays(1)}: $roundedPredictedValue")
+                    Text(text = "Сглаженный прогноз: ${today.plusDays(1)}: $roundedPredictedValue")
                 } ?: Text(text = "Нет прогноза")
             }
         }

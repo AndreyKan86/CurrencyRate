@@ -54,8 +54,8 @@ class CurrencyViewModel : ViewModel() {
     private val otherUrl = "&showchartp=False"
     private lateinit var ekf: ExtendedKalmanFilter
 
-    var isDarkTheme by mutableStateOf(true)
-        private set
+    private val _isDarkTheme = MutableStateFlow(true)
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
 
     init {
         updateEndDateUrl()
@@ -63,7 +63,7 @@ class CurrencyViewModel : ViewModel() {
     }
 
     fun toggleTheme() {
-        isDarkTheme = !isDarkTheme
+        _isDarkTheme.value = !_isDarkTheme.value
     }
 
     fun loadCurrencyRates() {
