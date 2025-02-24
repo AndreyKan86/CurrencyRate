@@ -36,16 +36,9 @@ import kotlinx.coroutines.launch
 fun MainScaffold(currencyViewModel: CurrencyViewModel = viewModel()) {
     val isDarkTheme by currencyViewModel.isDarkTheme.collectAsState()
 
-    CurrencyRateTheme(darkTheme = isDarkTheme) { // <-- Изменение: Обернули все в CurrencyRateTheme
+    CurrencyRateTheme(darkTheme = isDarkTheme) {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
-
-
-            //MaterialTheme(
-            //) {
-               // val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-                //val scope = rememberCoroutineScope()
-
                 ModalNavigationDrawer(
                     drawerState = drawerState,
                     drawerContent = {
@@ -87,5 +80,4 @@ fun MainScaffold(currencyViewModel: CurrencyViewModel = viewModel()) {
                     }
                 }
             }
-    //    }
     }

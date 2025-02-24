@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -112,7 +113,7 @@ fun MainScreen(currencyViewModel: CurrencyViewModel = viewModel(), modifier: Mod
             // Box для легенды
             Box(
                 modifier = Modifier.constrainAs(boxTopLeft) {
-                    top.linkTo(parent.top)
+                    top.linkTo(parent.top, margin = 8.dp)
                     bottom.linkTo(horizontalDivider.top)
                     start.linkTo(parent.start)
                     end.linkTo(verticalGuideline)
