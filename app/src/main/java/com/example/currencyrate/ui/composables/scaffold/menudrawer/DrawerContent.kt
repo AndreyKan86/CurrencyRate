@@ -1,6 +1,5 @@
 package com.example.currencyrate.ui.composables.scaffold.menudrawer
 
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,7 +47,7 @@ fun DrawerContent(onItemClick: () -> Unit)
                 }
             ) {
                 ThemeSwitcher(
-                    isDarkTheme = !isDarkTheme, // Используем полученное значение
+                    isDarkTheme = !isDarkTheme,
                     onThemeChanged = { viewModel.toggleTheme() }
                 )
             }

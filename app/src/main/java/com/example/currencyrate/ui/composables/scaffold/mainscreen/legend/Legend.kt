@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,7 +40,7 @@ fun Legend (currencyViewModel: CurrencyViewModel = viewModel()){
     )
 
     val selectedCurrencyImage = currencyImageMap[selectedCurrency]
-    val imageToDisplay = selectedCurrencyImage ?: R.drawable.logo
+    //val imageToDisplay = selectedCurrencyImage  ?: R.drawable.logo
 
 
     ConstraintLayout(
@@ -64,19 +66,22 @@ fun Legend (currencyViewModel: CurrencyViewModel = viewModel()){
         Box(
             modifier = Modifier
                 .constrainAs(imageRef) {
-                    bottom.linkTo(parent.bottom, margin = 16.dp)
+                    bottom.linkTo(parent.bottom, margin = 6.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 }
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .height(80.dp),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = imageToDisplay),
-                contentDescription = selectedCurrency + LOGO_DESCRIPTION,
-                modifier = Modifier
-                    .size(200.dp)
-            )
+            if (selectedCurrencyImage != null) {
+                Image(
+                    painter = painterResource(id = selectedCurrencyImage),
+                    contentDescription = selectedCurrency + LOGO_DESCRIPTION,
+                    modifier = Modifier
+                        .size(160.dp)
+                )
+            }
         }
         Box (
             modifier = Modifier.constrainAs(columnRef){
@@ -84,6 +89,7 @@ fun Legend (currencyViewModel: CurrencyViewModel = viewModel()){
                 top.linkTo(textRef.bottom)
                 end.linkTo(parent.end)
             }
+                .padding(8.dp)
         ) {
             Column {
                 predictedValue?.let {
